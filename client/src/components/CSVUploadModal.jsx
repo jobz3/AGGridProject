@@ -3,10 +3,11 @@ import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
+import CircularProgress from '@mui/material/CircularProgress';
 import { AgGridReact } from 'ag-grid-react';
 import Papa from 'papaparse';
 import { Upload, X, CheckCircle, AlertCircle } from 'lucide-react';
-import { getData } from '../utils/api';
+import { pushData } from '../utils/api';
 
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
@@ -31,7 +32,9 @@ export default function CSVUploadModal({ open, onClose, onDataImport }) {
     const [rowData, setRowData] = useState([]);
     const [fileName, setFileName] = useState('');
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const [isDragging, setIsDragging] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
 
     const handleFileUpload = useCallback((file) => {
         if (!file) return;
@@ -43,6 +46,7 @@ export default function CSVUploadModal({ open, onClose, onDataImport }) {
 
         setFileName(file.name);
         setError('');
+        setSuccess('');
 
         Papa.parse(file, {
             header: true,
@@ -108,10 +112,33 @@ export default function CSVUploadModal({ open, onClose, onDataImport }) {
         }
     };
 
-    const handleImport = () => {
-        if (csvData && onDataImport) {
-            onDataImport(csvData, columnDefs);
-            handleClose();
+    const handleImport = async () => {
+        if (!csvData) return;
+
+        try {
+            setIsUploading(true);
+            setError('');
+            
+            // Call the pushData API function
+            const response = await pushData(csvData);
+            
+            setSuccess(`Successfully imported ${csvData.length} rows!`);
+            
+            // Call the parent callback if provided
+            if (onDataImport) {
+                onDataImport(csvData, columnDefs);
+            }
+            
+            // Close modal after a brief delay to show success message
+            setTimeout(() => {
+                handleClose();
+            }, 1500);
+            
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to import data. Please try again.');
+            console.error('Import error:', err);
+        } finally {
+            setIsUploading(false);
         }
     };
 
@@ -121,7 +148,9 @@ export default function CSVUploadModal({ open, onClose, onDataImport }) {
         setRowData([]);
         setFileName('');
         setError('');
+        setSuccess('');
         setIsDragging(false);
+        setIsUploading(false);
         onClose();
     };
 
@@ -136,7 +165,11 @@ export default function CSVUploadModal({ open, onClose, onDataImport }) {
                     <Typography variant="h5" component="h2">
                         Import CSV Data
                     </Typography>
-                    <Button onClick={handleClose} style={{ minWidth: 'auto', padding: '8px' }}>
+                    <Button 
+                        onClick={handleClose} 
+                        style={{ minWidth: 'auto', padding: '8px' }}
+                        disabled={isUploading}
+                    >
                         <X size={20} />
                     </Button>
                 </div>
@@ -226,17 +259,50 @@ export default function CSVUploadModal({ open, onClose, onDataImport }) {
                                     setRowData([]);
                                     setColumnDefs([]);
                                     setFileName('');
+                                    setError('');
+                                    setSuccess('');
                                 }}
+                                disabled={isUploading}
                             >
                                 Change File
                             </Button>
                         </div>
 
+                        {error && (
+                            <div style={{ 
+                                marginBottom: '20px', 
+                                padding: '12px', 
+                                backgroundColor: '#ffebee', 
+                                borderRadius: '4px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                            }}>
+                                <AlertCircle size={20} color="#c62828" />
+                                <Typography color="error">{error}</Typography>
+                            </div>
+                        )}
+
+                        {success && (
+                            <div style={{ 
+                                marginBottom: '20px', 
+                                padding: '12px', 
+                                backgroundColor: '#e8f5e9', 
+                                borderRadius: '4px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                            }}>
+                                <CheckCircle size={20} color="#2e7d32" />
+                                <Typography color="success.main">{success}</Typography>
+                            </div>
+                        )}
+
                         <Typography variant="h6" gutterBottom>
                             Preview Data
                         </Typography>
 
-                        <div className="ag-theme-alpine" style={{ height: 400, width: '100%', marginBottom: '20px' }}>
+                        <div className="ag-theme-quartz" style={{ height: 400, width: '100%', marginBottom: '20px' }}>
                             <AgGridReact
                                 rowData={rowData}
                                 columnDefs={columnDefs}
@@ -251,11 +317,20 @@ export default function CSVUploadModal({ open, onClose, onDataImport }) {
                         </div>
 
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                            <Button variant="outlined" onClick={handleClose}>
+                            <Button 
+                                variant="outlined" 
+                                onClick={handleClose}
+                                disabled={isUploading}
+                            >
                                 Cancel
                             </Button>
-                            <Button variant="contained" onClick={getData}>
-                                Import Data
+                            <Button 
+                                variant="contained" 
+                                onClick={handleImport}
+                                disabled={isUploading}
+                                startIcon={isUploading ? <CircularProgress size={20} color="inherit" /> : null}
+                            >
+                                {isUploading ? 'Importing...' : 'Import Data'}
                             </Button>
                         </div>
                     </div>
@@ -264,4 +339,3 @@ export default function CSVUploadModal({ open, onClose, onDataImport }) {
         </Modal>
     );
 }
-
