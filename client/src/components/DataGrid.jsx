@@ -3,7 +3,7 @@ import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import { AgGridReact } from 'ag-grid-react';
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import DataViewModal from './DataViewModal.jsx';
+import { useNavigate } from 'react-router-dom';
 import FilterModal from './FilterModal.jsx';
 import DataDeleteModal from './DataDeleteModal.jsx';
 import { getData, searchData, filterData, deleteRows } from '../utils/api.js';
@@ -19,7 +19,7 @@ const ActionCell = (props) => {
 
     const onView = (e) => {
         e.stopPropagation();
-        context.openModal(data);
+        context.navigate('/detail', { state: { row: data } });
     };
 
     const onDelete = (e) => {
@@ -80,7 +80,7 @@ const ActionCell = (props) => {
 
 export default function DataGrid() {
     const { mode } = useThemeMode();
-    const [modalOpen, setModalOpen] = useState(false);
+    const navigate = useNavigate();
     const [filterModalOpen, setFilterModalOpen] = useState(false);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [selectedRow, setSelectedRow] = useState(null);
@@ -92,16 +92,6 @@ export default function DataGrid() {
     const [activeFilters, setActiveFilters] = useState([]);
     const [columns, setColumns] = useState([]);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
-
-    const openModal = useCallback((row) => {
-        setSelectedRow(row);
-        setModalOpen(true);
-    }, []);
-
-    const closeModal = useCallback(() => {
-        setModalOpen(false);
-        setSelectedRow(null);
-    }, []);
 
     const openDeleteModal = useCallback((row) => {
         setSelectedRow(row);
@@ -198,12 +188,6 @@ export default function DataGrid() {
         fetchData();
     };
 
-    const handleDeleteClick = (row) => {
-        setSelectedRow(row);
-        setModalOpen(false);
-        setDeleteModalOpen(true);
-    };
-
     const handleDeleteConfirm = async () => {
         if (!selectedRow || !selectedRow.id) {
             setSnackbar({ open: true, message: 'No row selected', severity: 'error' });
@@ -242,9 +226,9 @@ export default function DataGrid() {
     }), []);
 
     const context = useMemo(() => ({
-        openModal,
+        navigate,
         openDeleteModal
-    }), [openModal]);
+    }), [navigate, openDeleteModal]);
 
     const gridTheme = useMemo(() => {
         return themeQuartz
@@ -367,13 +351,6 @@ export default function DataGrid() {
                     rowClass="ag-row"
                 />
             </div>
-
-            <DataViewModal
-                open={modalOpen}
-                row={selectedRow}
-                onClose={closeModal}
-                onDelete={handleDeleteClick}
-            />
 
             <FilterModal
                 open={filterModalOpen}

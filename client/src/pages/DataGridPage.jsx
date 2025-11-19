@@ -76,7 +76,7 @@ export default function DataGridPage() {
                             onClick={toggleTheme}
                             sx={{ color: isDarkMode ? '#CED4DA' : '#6C757D' }}
                         >
-                            {mode === 'light' ? <Brightness4 /> + 'light' : <Brightness7 />}
+                            {mode === 'light' ? <Brightness4 /> : <Brightness7 />}
                         </IconButton>
                     </Tooltip>
                 </Toolbar>
