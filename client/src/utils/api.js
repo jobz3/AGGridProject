@@ -1,13 +1,12 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: process.env.REACT_APP_BACKEND_URL || 'http://localhost:3000/api'
+    baseURL: import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000/api'
 });
 
 export async function getData() {
     try {
         const res = await api.get('/');
-        console.log(res.data);
         return res.data;
     } catch (err) {
         console.error(err);
@@ -20,7 +19,6 @@ export async function pushData(csvData) {
         const res = await api.post('/push-data', {
             rows: csvData
         });
-        console.log('Data pushed successfully:', res.data);
         return res.data;
     } catch (err) {
         console.error('Error pushing data:', err);
@@ -33,7 +31,6 @@ export async function searchData(query) {
         const res = await api.get('/search', {
             params: { query }
         });
-        console.log('Search results:', res.data);
         return res.data;
     } catch (err) {
         console.error('Error searching data:', err);
@@ -46,7 +43,6 @@ export async function filterData(filters) {
         const res = await api.post('/filter', {
             filters
         });
-        console.log('Filter results:', res.data);
         return res.data;
     } catch (err) {
         console.error('Error filtering data:', err);
@@ -59,7 +55,6 @@ export async function deleteRows(ids) {
         const res = await api.delete('/delete-row', {
             data: { ids }
         });
-        console.log('Delete successful:', res.data);
         return res.data;
     } catch (err) {
         console.error('Error deleting rows:', err);

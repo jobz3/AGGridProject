@@ -1,15 +1,18 @@
 import logo from './logo.svg';
 import './App.css';
 // import DataGrid from './components/DataGrid.jsx';
-import DataGridPage from './pages/DataGridPage';
+import DataGridPage from './pages/DataGridPage.jsx';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
+import { ThemeProvider } from './context/ThemeContext.jsx';
 
 function App() {
   ModuleRegistry.registerModules([AllCommunityModule]);
   return (
-    <div className="App">
-      <DataGridPage />
-    </div>
+    <ThemeProvider>
+      <div className="App">
+        <DataGridPage />
+      </div>
+    </ThemeProvider>
   );
 }
 

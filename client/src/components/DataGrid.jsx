@@ -3,15 +3,17 @@ import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import { AgGridReact } from 'ag-grid-react';
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import DataViewModal from './DataViewModal';
-import FilterModal from './FilterModal';
-import DataDeleteModal from './DataDeleteModal';
+import DataViewModal from './DataViewModal.jsx';
+import FilterModal from './FilterModal.jsx';
+import DataDeleteModal from './DataDeleteModal.jsx';
 import { getData, searchData, filterData, deleteRows } from '../utils/api.js';
-import { Search, Filter, RefreshCw, Trash2 } from 'lucide-react';
-import Snackbar from '@mui/material/Snackbar';
+    import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
-import { Filter1, FilterList, SearchOutlined, Visibility } from '@mui/icons-material';
-
+import { Delete, Filter1, FilterList, Refresh, SearchOutlined, Visibility } from '@mui/icons-material';
+import { useThemeMode } from '../context/ThemeContext.jsx';
+import { themeQuartz, colorSchemeDark, colorSchemeLight, iconSetMaterial } from 'ag-grid-community';
+import 'ag-grid-community/styles/ag-grid.css';
+import './DataGrid.css';
 const ActionCell = (props) => {
     const { data, context } = props;
 
@@ -26,25 +28,58 @@ const ActionCell = (props) => {
     };
 
     return (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '100%' }}>
-            <Button size='small' variant='outlined' onClick={onView}>
-                <Visibility fontSize='20'/>
+        <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            height: '100%',
+            padding: '8px 0'
+        }}>
+            <Button
+                size='small'
+                variant='contained'
+                onClick={onView}
+                startIcon={<Visibility sx={{ fontSize: 16 }} />}
+                sx={{
+                    textTransform: 'none',
+                    fontWeight: 500,
+                    borderRadius: '6px',
+                    bgcolor: '#007BFF',
+                    color: '#FFFFFF',
+                    padding: '4px 12px',
+                    '&:hover': {
+                        bgcolor: '#0056b3',
+                    },
+                }}
+            >
                 View
             </Button>
             <Button
                 size='small'
-                variant='outlined'
-                color='error'
+                variant='contained'
                 onClick={onDelete}
-                startIcon={<Trash2 size={14} />}
+                startIcon={<Delete size={14} />}
+                sx={{
+                    textTransform: 'none',
+                    fontWeight: 500,
+                    borderRadius: '6px',
+                    bgcolor: '#DC3545',
+                    color: '#FFFFFF',
+                    padding: '4px 12px',
+                    '&:hover': {
+                        bgcolor: '#c82333',
+                    },
+                }}
             >
-                Delete
+                Remove
             </Button>
         </div>
     );
 };
 
 export default function DataGrid() {
+    const { mode } = useThemeMode();
     const [modalOpen, setModalOpen] = useState(false);
     const [filterModalOpen, setFilterModalOpen] = useState(false);
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -87,17 +122,20 @@ export default function DataGrid() {
 
                 const dynamicColDefs = keys.filter(k => k !== 'id').map(key => ({
                     field: key,
-                    headerName: key.charAt(0).toUpperCase() + key.slice(1),
+                    headerName: key.replace(/_/g, ' ').toUpperCase(),
+                    cellStyle: { display: 'flex', alignItems: 'center' },
+                    autoHeight: false,
                 }));
 
                 dynamicColDefs.push({
                     field: 'actions',
-                    headerName: 'Actions',
+                    headerName: 'ACTIONS',
                     pinned: 'right',
-                    width: 200,
+                    width: 220,
                     cellRenderer: ActionCell,
                     sortable: false,
-                    filter: false
+                    filter: false,
+                    cellStyle: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
                 });
 
                 setColDefs(dynamicColDefs);
@@ -108,7 +146,7 @@ export default function DataGrid() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [mode]);
 
     const handleSearch = useCallback(async (query) => {
         if (!query.trim()) {
@@ -198,6 +236,9 @@ export default function DataGrid() {
         filter: false,
         flex: 1,
         minWidth: 150,
+        wrapHeaderText: true,
+        autoHeaderHeight: true,
+        cellStyle: { display: 'flex', alignItems: 'center' },
     }), []);
 
     const context = useMemo(() => ({
@@ -205,52 +246,125 @@ export default function DataGrid() {
         openDeleteModal
     }), [openModal]);
 
+    const gridTheme = useMemo(() => {
+        return themeQuartz
+            .withPart(iconSetMaterial)
+            .withPart(mode === 'dark' ? colorSchemeDark : colorSchemeLight);
+    }, [mode]);
+
     return (
         <>
-            <div style={{ marginBottom: '16px', display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <TextField
-                    size="small"
-                    placeholder="Search across all columns..."
-                    value={searchQuery}
-                    onChange={handleSearchChange}
-                    sx={{ flex: 1, maxWidth: 400 }}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                {/* <Search size={20} /> */}
-                                <SearchOutlined fontSize='20'/>
-                            </InputAdornment>
-                        ),
-                    }}
-                />
+            <div style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                marginBottom: '0',
+                padding: '16px 20px',
+                backgroundColor: mode === 'dark' ? '#2C3E50' : '#FFFFFF',
+                borderRadius: '12px 12px 0 0',
+            }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'flex-end' }}>
+                    <TextField
+                        size="small"
+                        placeholder="Search across all columns..."
+                        value={searchQuery}
+                        onChange={handleSearchChange}
+                        sx={{
+                            width: '350px',
+                            '& .MuiOutlinedInput-root': {
+                                borderRadius: '8px',
+                                backgroundColor: mode === 'dark' ? '#34495E' : '#FFFFFF',
+                                '& fieldset': {
+                                    borderColor: mode === 'dark' ? '#495057' : '#CED4DA',
+                                },
+                                '&:hover fieldset': {
+                                    borderColor: mode === 'dark' ? '#495057' : '#ADB5BD',
+                                },
+                            },
+                            '& input::placeholder': {
+                                color: mode === 'dark' ? '#ADB5BD' : '#6C757D',
+                            }
+                        }}
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchOutlined fontSize='small' sx={{ color: mode === 'dark' ? '#CED4DA' : '#6C757D' }} />
+                                </InputAdornment>
+                            ),
+                        }}
+                    />
 
-                <Button
-                    variant="outlined"
-                    startIcon={<FilterList fontSize='20' />}
-                    onClick={() => setFilterModalOpen(true)}
-                >
-                    Filters {activeFilters.length > 0 && `(${activeFilters.length})`}
-                </Button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <Button
+                            variant="outlined"
+                            startIcon={<FilterList fontSize='small' />}
+                            onClick={() => setFilterModalOpen(true)}
+                            sx={{
+                                textTransform: 'none',
+                                fontWeight: 500,
+                                borderRadius: '8px',
+                                padding: '6px 16px',
+                                borderColor: mode === 'dark' ? '#495057' : '#CED4DA',
+                                color: mode === 'dark' ? '#CED4DA' : '#495057',
+                                '&:hover': {
+                                    borderColor: mode === 'dark' ? '#ADB5BD' : '#ADB5BD',
+                                    backgroundColor: mode === 'dark' ? '#34495E' : '#F8F9FA',
+                                },
+                            }}
+                        >
+                            Filter Options {activeFilters.length > 0 && `(${activeFilters.length})`}
+                        </Button>
 
-                <Button
-                    variant="outlined"
-                    startIcon={<RefreshCw size={16} />}
-                    onClick={handleRefresh}
-                >
-                    Refresh
-                </Button>
+                        <Button
+                            variant="outlined"
+                            startIcon={<Refresh size={16} />}
+                            onClick={handleRefresh}
+                            sx={{
+                                textTransform: 'none',
+                                fontWeight: 500,
+                                borderRadius: '8px',
+                                padding: '6px 16px',
+                                borderColor: mode === 'dark' ? '#495057' : '#CED4DA',
+                                color: mode === 'dark' ? '#CED4DA' : '#495057',
+                                '&:hover': {
+                                    borderColor: mode === 'dark' ? '#ADB5BD' : '#ADB5BD',
+                                    backgroundColor: mode === 'dark' ? '#34495E' : '#F8F9FA',
+                                },
+                            }}
+                        >
+                            Refresh Data
+                        </Button>
+
+                    </div>
+                </div>
             </div>
 
-            <div className="ag-theme-alpine" style={{ height: 500, width: '100%' }}>
+            <div
+                className="ag-theme-quartz"
+                data-dark-mode={mode === 'dark'}
+                style={{
+                    height: 'calc(100vh - 300px)',
+                    minHeight: '500px',
+                    width: '100%',
+                    borderRadius: '0 0 12px 12px',
+                    overflow: 'hidden',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                }}
+            >
                 <AgGridReact
+                    theme={gridTheme}
                     rowData={rowData}
                     columnDefs={colDefs}
                     context={context}
                     defaultColDef={defaultColDef}
-                    rowHeight={50}
+                    rowHeight={52}
                     animateRows={true}
                     loading={loading}
-                    headerHeight={75}
+                    headerHeight={56}
+                    suppressCellFocus={true}
+                    pagination={true}
+                    paginationPageSize={10}
+                    paginationPageSizeSelector={[10, 25, 50, 100]}
+                    rowClass="ag-row"
                 />
             </div>
 

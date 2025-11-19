@@ -4,8 +4,11 @@ import Box from '@mui/material/Box';
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import { ChevronLeft, Trash2 } from 'lucide-react';
+import { useThemeMode } from '../context/ThemeContext.jsx';
 
 export default function DataViewModal({ open, onClose, row, onDelete }) {
+    const { mode } = useThemeMode();
+    const isDarkMode = mode === 'dark';
 
     const modalStyle = {
         position: 'absolute',
@@ -14,11 +17,12 @@ export default function DataViewModal({ open, onClose, row, onDelete }) {
         transform: 'translate(-50%, -50%)',
         width: 600,
         maxHeight: '80vh',
-        bgcolor: 'background.paper',
+        bgcolor: isDarkMode ? '#2C3E50' : '#FFFFFF',
         boxShadow: 24,
         p: 4,
         overflow: 'auto',
         borderRadius: 2,
+        color: isDarkMode ? '#F8F9FA' : '#212529'
     };
 
     const formatFieldName = (field) => {
@@ -59,21 +63,38 @@ export default function DataViewModal({ open, onClose, row, onDelete }) {
         
             <Box sx={modalStyle}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Button 
-                        variant="text" 
+                    <Button
+                        variant="text"
                         onClick={onClose}
-                        sx={{ p: 0.5 }}
+                        sx={{
+                            p: 0.5,
+                            textTransform: 'none',
+                            color: isDarkMode ? '#CED4DA' : '#495057',
+                            '&:hover': {
+                                backgroundColor: isDarkMode ? '#34495E' : '#F8F9FA',
+                            }
+                        }}
                     >
-                        <ChevronLeft size={20} /> 
+                        <ChevronLeft size={20} />
                         <Typography sx={{ ml: 0.5 }}>Back</Typography>
                     </Button>
 
-                    <Button 
-                        variant="outlined"
-                        color="error"
+                    <Button
+                        variant="contained"
                         size="small"
-                        startIcon={<Trash2 size={16} />}
+                        startIcon={<Trash2 size={14} />}
                         onClick={handleDelete}
+                        sx={{
+                            textTransform: 'none',
+                            fontWeight: 500,
+                            borderRadius: '6px',
+                            bgcolor: '#DC3545',
+                            color: '#FFFFFF',
+                            padding: '4px 12px',
+                            '&:hover': {
+                                bgcolor: '#c82333',
+                            },
+                        }}
                     >
                         Delete
                     </Button>
@@ -91,12 +112,14 @@ export default function DataViewModal({ open, onClose, row, onDelete }) {
                             {Object.entries(row)
                                 .filter(([key]) => !['actions', 'created_at'].includes(key))
                                 .map(([key, value], index, arr) => (
-                                    <Box 
-                                        key={key} 
-                                        sx={{ 
+                                    <Box
+                                        key={key}
+                                        sx={{
                                             mb: 2.5,
                                             pb: 2,
-                                            borderBottom: index < arr.length - 1 ? '1px solid #f0f0f0' : 'none'
+                                            borderBottom: index < arr.length - 1
+                                                ? `1px solid ${isDarkMode ? '#34495E' : '#DEE2E6'}`
+                                                : 'none'
                                         }}
                                     >
                                         <Typography 

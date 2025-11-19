@@ -60,10 +60,11 @@ services:
       backend:
         condition: service_started
     volumes:
-        - ./client:/usr/src/app
+    - ./client:/usr/src/app
+    - /usr/src/app/node_modules
     ports: 
     - "5000:5000"
-    command: ["npm", "start"]
+    command: ["npm", "start", "--", "-host=0.0.0.0"]
 
 
 volumes:

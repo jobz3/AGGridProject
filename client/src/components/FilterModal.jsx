@@ -10,20 +10,7 @@ import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import IconButton from '@mui/material/IconButton';
 import { X, Plus, Trash2, Filter as FilterIcon } from 'lucide-react';
-
-const modalStyle = {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: 700,
-    maxHeight: '90vh',
-    bgcolor: 'background.paper',
-    boxShadow: 24,
-    p: 4,
-    overflow: 'auto',
-    borderRadius: 2,
-};
+import { useThemeMode } from '../context/ThemeContext.jsx';
 
 const OPERATORS = [
     { value: 'contains', label: 'Contains' },
@@ -39,9 +26,27 @@ const OPERATORS = [
 ];
 
 export default function FilterModal({ open, onClose, columns, onApplyFilters }) {
+    const { mode } = useThemeMode();
+    const isDarkMode = mode === 'dark';
+
     const [filters, setFilters] = useState([
         { column: '', operator: 'contains', value: '' }
     ]);
+
+    const modalStyle = {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: 700,
+        maxHeight: '90vh',
+        bgcolor: isDarkMode ? '#2C3E50' : '#FFFFFF',
+        boxShadow: 24,
+        p: 4,
+        overflow: 'auto',
+        borderRadius: 2,
+        color: isDarkMode ? '#F8F9FA' : '#212529'
+    };
 
     const addFilter = () => {
         setFilters([...filters, { column: '', operator: 'contains', value: '' }]);
@@ -91,15 +96,15 @@ export default function FilterModal({ open, onClose, columns, onApplyFilters }) 
 
                 <Box sx={{ mb: 3 }}>
                     {filters.map((filter, index) => (
-                        <Box 
-                            key={index} 
-                            sx={{ 
-                                display: 'flex', 
-                                gap: 2, 
-                                mb: 2, 
+                        <Box
+                            key={index}
+                            sx={{
+                                display: 'flex',
+                                gap: 2,
+                                mb: 2,
                                 alignItems: 'flex-start',
                                 p: 2,
-                                bgcolor: '#f5f5f5',
+                                bgcolor: isDarkMode ? '#34495E' : '#F8F9FA',
                                 borderRadius: 1
                             }}
                         >
@@ -143,10 +148,15 @@ export default function FilterModal({ open, onClose, columns, onApplyFilters }) 
                                 />
                             )}
 
-                            <IconButton 
+                            <IconButton
                                 onClick={() => removeFilter(index)}
-                                color="error"
                                 disabled={filters.length === 1}
+                                sx={{
+                                    color: '#DC3545',
+                                    '&:hover': {
+                                        backgroundColor: isDarkMode ? 'rgba(220, 53, 69, 0.1)' : 'rgba(220, 53, 69, 0.1)',
+                                    }
+                                }}
                             >
                                 <Trash2 size={20} />
                             </IconButton>
@@ -158,16 +168,51 @@ export default function FilterModal({ open, onClose, columns, onApplyFilters }) 
                         onClick={addFilter}
                         variant="outlined"
                         size="small"
+                        sx={{
+                            textTransform: 'none',
+                            fontWeight: 500,
+                            borderRadius: '6px',
+                            borderColor: isDarkMode ? '#495057' : '#CED4DA',
+                            color: isDarkMode ? '#CED4DA' : '#495057',
+                            '&:hover': {
+                                borderColor: isDarkMode ? '#ADB5BD' : '#ADB5BD',
+                                backgroundColor: isDarkMode ? '#34495E' : '#F8F9FA',
+                            },
+                        }}
                     >
                         Add Filter
                     </Button>
                 </Box>
 
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 3 }}>
-                    <Button variant="outlined" onClick={handleClear}>
+                    <Button
+                        variant="outlined"
+                        onClick={handleClear}
+                        sx={{
+                            textTransform: 'none',
+                            fontWeight: 500,
+                            borderRadius: '8px',
+                            padding: '6px 16px',
+                            borderColor: isDarkMode ? '#495057' : '#CED4DA',
+                            color: isDarkMode ? '#CED4DA' : '#495057',
+                            '&:hover': {
+                                borderColor: isDarkMode ? '#ADB5BD' : '#ADB5BD',
+                                backgroundColor: isDarkMode ? '#34495E' : '#F8F9FA',
+                            },
+                        }}
+                    >
                         Clear All
                     </Button>
-                    <Button variant="contained" onClick={handleApply}>
+                    <Button
+                        variant="contained"
+                        onClick={handleApply}
+                        sx={{
+                            textTransform: 'none',
+                            fontWeight: 500,
+                            borderRadius: '8px',
+                            padding: '6px 16px',
+                        }}
+                    >
                         Apply Filters
                     </Button>
                 </Box>

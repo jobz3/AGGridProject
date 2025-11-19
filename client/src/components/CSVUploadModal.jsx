@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -8,25 +8,13 @@ import { AgGridReact } from 'ag-grid-react';
 import Papa from 'papaparse';
 import { Upload, X, CheckCircle, AlertCircle } from 'lucide-react';
 import { pushData } from '../utils/api';
+import { useThemeMode } from '../context/ThemeContext.jsx';
+import { themeQuartz, colorSchemeDark, colorSchemeLight, iconSetMaterial } from 'ag-grid-community';
 
 import 'ag-grid-community/styles/ag-grid.css';
-import 'ag-grid-community/styles/ag-theme-alpine.css';
-
-const modalStyle = {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: '90%',
-    maxWidth: 1200,
-    maxHeight: '90vh',
-    bgcolor: 'background.paper',
-    boxShadow: 24,
-    p: 4,
-    overflow: 'auto'
-};
 
 export default function CSVUploadModal({ open, onClose, onDataImport }) {
+    const { mode } = useThemeMode();
     const [csvData, setCsvData] = useState(null);
     const [columnDefs, setColumnDefs] = useState([]);
     const [rowData, setRowData] = useState([]);
@@ -35,6 +23,29 @@ export default function CSVUploadModal({ open, onClose, onDataImport }) {
     const [success, setSuccess] = useState('');
     const [isDragging, setIsDragging] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+
+    const isDarkMode = mode === 'dark';
+
+    const modalStyle = {
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '90%',
+        maxWidth: 1200,
+        maxHeight: '90vh',
+        bgcolor: isDarkMode ? '#2C3E50' : '#FFFFFF',
+        boxShadow: 24,
+        p: 4,
+        overflow: 'auto',
+        color: isDarkMode ? '#F8F9FA' : '#212529'
+    };
+
+    const gridTheme = useMemo(() => {
+        return themeQuartz
+            .withPart(iconSetMaterial)
+            .withPart(isDarkMode ? colorSchemeDark : colorSchemeLight);
+    }, [isDarkMode]);
 
     const handleFileUpload = useCallback((file) => {
         if (!file) return;
@@ -105,7 +116,7 @@ export default function CSVUploadModal({ open, onClose, onDataImport }) {
     const handleDrop = (e) => {
         e.preventDefault();
         setIsDragging(false);
-        
+
         const file = e.dataTransfer.files?.[0];
         if (file) {
             handleFileUpload(file);
@@ -118,22 +129,22 @@ export default function CSVUploadModal({ open, onClose, onDataImport }) {
         try {
             setIsUploading(true);
             setError('');
-            
+
             // Call the pushData API function
             const response = await pushData(csvData);
-            
+
             setSuccess(`Successfully imported ${csvData.length} rows!`);
-            
+
             // Call the parent callback if provided
             if (onDataImport) {
                 onDataImport(csvData, columnDefs);
             }
-            
+
             // Close modal after a brief delay to show success message
             setTimeout(() => {
                 handleClose();
             }, 1500);
-            
+
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to import data. Please try again.');
             console.error('Import error:', err);
@@ -165,8 +176,8 @@ export default function CSVUploadModal({ open, onClose, onDataImport }) {
                     <Typography variant="h5" component="h2">
                         Import CSV Data
                     </Typography>
-                    <Button 
-                        onClick={handleClose} 
+                    <Button
+                        onClick={handleClose}
                         style={{ minWidth: 'auto', padding: '8px' }}
                         disabled={isUploading}
                     >
@@ -181,16 +192,22 @@ export default function CSVUploadModal({ open, onClose, onDataImport }) {
                             onDragLeave={handleDragLeave}
                             onDrop={handleDrop}
                             style={{
-                                border: isDragging ? '3px dashed #1976d2' : '2px dashed #ccc',
+                                border: isDragging
+                                    ? `3px dashed ${isDarkMode ? '#007BFF' : '#007BFF'}`
+                                    : isDarkMode
+                                        ? '2px dashed #495057'
+                                        : '2px dashed #CED4DA',
                                 borderRadius: '8px',
                                 padding: '60px 20px',
                                 textAlign: 'center',
-                                backgroundColor: isDragging ? '#e3f2fd' : '#fafafa',
+                                backgroundColor: isDragging
+                                    ? (isDarkMode ? '#34495E' : '#F8F9FA')
+                                    : (isDarkMode ? '#34495E' : '#F8F9FA'),
                                 cursor: 'pointer',
                                 transition: 'all 0.3s ease'
                             }}
                         >
-                            <Upload size={48} style={{ color: '#1976d2', marginBottom: '16px' }} />
+                            <Upload size={48} style={{ color: isDarkMode ? '#007BFF' : '#007BFF', marginBottom: '16px' }} />
                             <Typography variant="h6" gutterBottom>
                                 Drag and drop your CSV file here
                             </Typography>
@@ -216,25 +233,27 @@ export default function CSVUploadModal({ open, onClose, onDataImport }) {
                         </div>
 
                         {error && (
-                            <div style={{ 
-                                marginTop: '20px', 
-                                padding: '12px', 
-                                backgroundColor: '#ffebee', 
+                            <div style={{
+                                marginTop: '20px',
+                                padding: '12px',
+                                backgroundColor: isDarkMode ? 'rgba(220, 53, 69, 0.15)' : 'rgba(220, 53, 69, 0.1)',
+                                border: `1px solid #DC3545`,
                                 borderRadius: '4px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '8px'
                             }}>
-                                <AlertCircle size={20} color="#c62828" />
-                                <Typography color="error">{error}</Typography>
+                                <AlertCircle size={20} color="#DC3545" />
+                                <Typography sx={{ color: '#DC3545' }}>{error}</Typography>
                             </div>
                         )}
                     </div>
                 ) : (
                     <div>
-                        <div style={{ 
-                            padding: '12px', 
-                            backgroundColor: '#e8f5e9', 
+                        <div style={{
+                            padding: '12px',
+                            backgroundColor: isDarkMode ? '#34495E' : '#F8F9FA',
+                            border: `1px solid ${isDarkMode ? '#495057' : '#DEE2E6'}`,
                             borderRadius: '4px',
                             marginBottom: '20px',
                             display: 'flex',
@@ -242,7 +261,7 @@ export default function CSVUploadModal({ open, onClose, onDataImport }) {
                             justifyContent: 'space-between'
                         }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <CheckCircle size={20} color="#2e7d32" />
+                                <CheckCircle size={20} color="#007BFF" />
                                 <div>
                                     <Typography variant="body1">
                                         <strong>{fileName}</strong>
@@ -252,8 +271,8 @@ export default function CSVUploadModal({ open, onClose, onDataImport }) {
                                     </Typography>
                                 </div>
                             </div>
-                            <Button 
-                                size="small" 
+                            <Button
+                                size="small"
                                 onClick={() => {
                                     setCsvData(null);
                                     setRowData([]);
@@ -269,32 +288,34 @@ export default function CSVUploadModal({ open, onClose, onDataImport }) {
                         </div>
 
                         {error && (
-                            <div style={{ 
-                                marginBottom: '20px', 
-                                padding: '12px', 
-                                backgroundColor: '#ffebee', 
+                            <div style={{
+                                marginBottom: '20px',
+                                padding: '12px',
+                                backgroundColor: isDarkMode ? 'rgba(220, 53, 69, 0.15)' : 'rgba(220, 53, 69, 0.1)',
+                                border: `1px solid #DC3545`,
                                 borderRadius: '4px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '8px'
                             }}>
-                                <AlertCircle size={20} color="#c62828" />
-                                <Typography color="error">{error}</Typography>
+                                <AlertCircle size={20} color="#DC3545" />
+                                <Typography sx={{ color: '#DC3545' }}>{error}</Typography>
                             </div>
                         )}
 
                         {success && (
-                            <div style={{ 
-                                marginBottom: '20px', 
-                                padding: '12px', 
-                                backgroundColor: '#e8f5e9', 
+                            <div style={{
+                                marginBottom: '20px',
+                                padding: '12px',
+                                backgroundColor: isDarkMode ? 'rgba(0, 123, 255, 0.15)' : 'rgba(0, 123, 255, 0.1)',
+                                border: `1px solid #007BFF`,
                                 borderRadius: '4px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '8px'
                             }}>
-                                <CheckCircle size={20} color="#2e7d32" />
-                                <Typography color="success.main">{success}</Typography>
+                                <CheckCircle size={20} color="#007BFF" />
+                                <Typography sx={{ color: '#007BFF' }}>{success}</Typography>
                             </div>
                         )}
 
@@ -302,8 +323,9 @@ export default function CSVUploadModal({ open, onClose, onDataImport }) {
                             Preview Data
                         </Typography>
 
-                        <div className="ag-theme-quartz" style={{ height: 400, width: '100%', marginBottom: '20px' }}>
+                        <div style={{ height: 400, width: '100%', marginBottom: '20px' }}>
                             <AgGridReact
+                                theme={gridTheme}
                                 rowData={rowData}
                                 columnDefs={columnDefs}
                                 defaultColDef={{
@@ -313,22 +335,42 @@ export default function CSVUploadModal({ open, onClose, onDataImport }) {
                                 }}
                                 pagination={true}
                                 paginationPageSize={10}
+                                paginationPageSizeSelector={[10, 25, 50, 100]}
+
                             />
                         </div>
 
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                            <Button 
-                                variant="outlined" 
+                            <Button
+                                variant="outlined"
                                 onClick={handleClose}
                                 disabled={isUploading}
+                                sx={{
+                                    textTransform: 'none',
+                                    fontWeight: 500,
+                                    borderRadius: '8px',
+                                    padding: '6px 16px',
+                                    borderColor: isDarkMode ? '#495057' : '#CED4DA',
+                                    color: isDarkMode ? '#CED4DA' : '#495057',
+                                    '&:hover': {
+                                        borderColor: isDarkMode ? '#ADB5BD' : '#ADB5BD',
+                                        backgroundColor: isDarkMode ? '#34495E' : '#F8F9FA',
+                                    },
+                                }}
                             >
                                 Cancel
                             </Button>
-                            <Button 
-                                variant="contained" 
+                            <Button
+                                variant="contained"
                                 onClick={handleImport}
                                 disabled={isUploading}
                                 startIcon={isUploading ? <CircularProgress size={20} color="inherit" /> : null}
+                                sx={{
+                                    textTransform: 'none',
+                                    fontWeight: 500,
+                                    borderRadius: '8px',
+                                    padding: '6px 16px',
+                                }}
                             >
                                 {isUploading ? 'Importing...' : 'Import Data'}
                             </Button>
