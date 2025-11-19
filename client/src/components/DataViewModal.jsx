@@ -1,11 +1,11 @@
 import Modal from "@mui/material/Modal";
 import Typography from "@mui/material/Typography";
 import Box from '@mui/material/Box';
-import { ChevronLeft } from 'lucide-react';
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
+import { ChevronLeft, Trash2 } from 'lucide-react';
 
-export default function DataViewModal({ open, onClose, row }) {
+export default function DataViewModal({ open, onClose, row, onDelete }) {
 
     const modalStyle = {
         position: 'absolute',
@@ -21,18 +21,16 @@ export default function DataViewModal({ open, onClose, row }) {
         borderRadius: 2,
     };
 
-    // Format field name: convert snake_case or camelCase to Title Case
     const formatFieldName = (field) => {
         return field
-            .replace(/([A-Z])/g, ' $1') // Add space before capital letters
-            .replace(/_/g, ' ') // Replace underscores with spaces
+            .replace(/([A-Z])/g, ' $1')
+            .replace(/_/g, ' ')
             .split(' ')
             .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
             .join(' ')
             .trim();
     };
 
-    // Format field value
     const formatFieldValue = (value) => {
         if (value === null || value === undefined) {
             return 'N/A';
@@ -46,6 +44,12 @@ export default function DataViewModal({ open, onClose, row }) {
         return String(value);
     };
 
+    const handleDelete = () => {
+        if (onDelete && row) {
+            onDelete(row);
+        }
+    };
+
     return (
         <Modal
             open={open}
@@ -54,14 +58,26 @@ export default function DataViewModal({ open, onClose, row }) {
             aria-describedby='modal-description'>
         
             <Box sx={modalStyle}>
-                <Button 
-                    variant="text" 
-                    onClick={onClose}
-                    sx={{ mb: 2, p: 0.5 }}
-                >
-                    <ChevronLeft size={20} /> 
-                    <Typography sx={{ ml: 0.5 }}>Back</Typography>
-                </Button>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Button 
+                        variant="text" 
+                        onClick={onClose}
+                        sx={{ p: 0.5 }}
+                    >
+                        <ChevronLeft size={20} /> 
+                        <Typography sx={{ ml: 0.5 }}>Back</Typography>
+                    </Button>
+
+                    <Button 
+                        variant="outlined"
+                        color="error"
+                        size="small"
+                        startIcon={<Trash2 size={16} />}
+                        onClick={handleDelete}
+                    >
+                        Delete
+                    </Button>
+                </Box>
 
                 <Typography id="view-data" variant="h5" component="h2" gutterBottom>
                     View Data
@@ -73,14 +89,14 @@ export default function DataViewModal({ open, onClose, row }) {
                     {row ? (
                         <Box>
                             {Object.entries(row)
-                                .filter(([key]) => key !== 'actions') // Filter out the actions field
-                                .map(([key, value], index) => (
+                                .filter(([key]) => !['actions', 'created_at'].includes(key))
+                                .map(([key, value], index, arr) => (
                                     <Box 
                                         key={key} 
                                         sx={{ 
                                             mb: 2.5,
                                             pb: 2,
-                                            borderBottom: index < Object.keys(row).length - 2 ? '1px solid #f0f0f0' : 'none'
+                                            borderBottom: index < arr.length - 1 ? '1px solid #f0f0f0' : 'none'
                                         }}
                                     >
                                         <Typography 
