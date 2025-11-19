@@ -17,6 +17,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
 
   adminer:
     image: adminer
@@ -24,14 +26,17 @@ services:
     restart: unless-stopped
     ports:
       - "8080:8080"
+    networks:
+      - app-network
 
   backend:
     build:
-      context: ./server
-      dockerfile: ../dockerfile.backend
+      context: .
+      dockerfile: dockerfile.backend
     container_name: aggrid_backend
     restart: unless-stopped
     environment:
+      - NODE_ENV=production
       - DB_HOST=mysql
       - DB_PORT=3306
       - DB_NAME=${DB_NAME}
@@ -42,30 +47,29 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-    volumes:
-      - ./server:/usr/src/app
     ports:
       - "3000:3000"
-    command: ["npm", "start"]
+    networks:
+      - app-network
     
   frontend:
     build:
-      context: ./client
-      dockerfile: ../dockerfile.frontend
+      context: .
+      dockerfile: dockerfile.frontend
     container_name: aggrid_frontend
     restart: unless-stopped
-    env_file:
-      - .env
     depends_on:
       backend:
         condition: service_started
-    volumes:
-    - ./client:/usr/src/app
-    - /usr/src/app/node_modules
-    ports: 
-    - "5000:5000"
-    command: ["npm", "start", "--", "-host=0.0.0.0"]
+    ports:
+      - "5000:5000"
+    networks:
+      - app-network
 
 
 volumes:
   db_data:
+
+networks:
+  app-network:
+    driver: bridge

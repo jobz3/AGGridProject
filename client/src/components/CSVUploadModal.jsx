@@ -4,10 +4,11 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
+import LinearProgress from '@mui/material/LinearProgress';
 import { AgGridReact } from 'ag-grid-react';
 import Papa from 'papaparse';
 import { Upload, X, CheckCircle, AlertCircle } from 'lucide-react';
-import { pushData } from '../utils/api';
+import { pushData, pushDataChunked } from '../utils/api';
 import { useThemeMode } from '../context/ThemeContext.jsx';
 import { themeQuartz, colorSchemeDark, colorSchemeLight, iconSetMaterial } from 'ag-grid-community';
 
@@ -23,6 +24,8 @@ export default function CSVUploadModal({ open, onClose, onDataImport }) {
     const [success, setSuccess] = useState('');
     const [isDragging, setIsDragging] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [uploadStats, setUploadStats] = useState(null);
 
     const isDarkMode = mode === 'dark';
 
@@ -129,27 +132,44 @@ export default function CSVUploadModal({ open, onClose, onDataImport }) {
         try {
             setIsUploading(true);
             setError('');
+            setUploadProgress(0);
+            setUploadStats(null);
 
-            // Call the pushData API function
-            const response = await pushData(csvData);
+            const CHUNK_THRESHOLD = 5000;
+            const useChunkedUpload = csvData.length > CHUNK_THRESHOLD;
 
-            setSuccess(`Successfully imported ${csvData.length} rows!`);
+            if (useChunkedUpload) {
+                const response = await pushDataChunked(csvData, 1000, (progress) => {
+                    setUploadProgress(progress.percentage);
+                    setUploadStats({
+                        current: progress.current,
+                        total: progress.total,
+                        rowsProcessed: progress.rowsProcessed,
+                        totalRows: progress.totalRows
+                    });
+                });
 
-            // Call the parent callback if provided
+                setSuccess(`Successfully imported ${response.rowsInserted} rows in ${response.chunks} chunks!`);
+            } else {
+                const response = await pushData(csvData);
+                setSuccess(`Successfully imported ${csvData.length} rows!`);
+            }
+
             if (onDataImport) {
                 onDataImport(csvData, columnDefs);
             }
 
-            // Close modal after a brief delay to show success message
             setTimeout(() => {
                 handleClose();
             }, 1500);
 
         } catch (err) {
-            setError(err.response?.data?.message || 'Failed to import data. Please try again.');
+            setError(err.response?.data?.error || err.message || 'Failed to import data. Please try again.');
             console.error('Import error:', err);
         } finally {
             setIsUploading(false);
+            setUploadProgress(0);
+            setUploadStats(null);
         }
     };
 
@@ -316,6 +336,40 @@ export default function CSVUploadModal({ open, onClose, onDataImport }) {
                             }}>
                                 <CheckCircle size={20} color="#007BFF" />
                                 <Typography sx={{ color: '#007BFF' }}>{success}</Typography>
+                            </div>
+                        )}
+
+                        {isUploading && uploadStats && (
+                            <div style={{
+                                marginBottom: '20px',
+                                padding: '16px',
+                                backgroundColor: isDarkMode ? '#34495E' : '#F8F9FA',
+                                border: `1px solid ${isDarkMode ? '#495057' : '#DEE2E6'}`,
+                                borderRadius: '4px'
+                            }}>
+                                <Typography variant="body2" gutterBottom>
+                                    Uploading: Chunk {uploadStats.current} of {uploadStats.total}
+                                </Typography>
+                                <Typography variant="body2" color="textSecondary" gutterBottom>
+                                    {uploadStats.rowsProcessed.toLocaleString()} / {uploadStats.totalRows.toLocaleString()} rows processed
+                                </Typography>
+                                {uploadStats.chunkSize && (
+                                    <Typography variant="caption" color="textSecondary" gutterBottom sx={{ display: 'block' }}>
+                                        Adaptive chunk size: {uploadStats.chunkSize} rows/chunk
+                                    </Typography>
+                                )}
+                                <LinearProgress
+                                    variant="determinate"
+                                    value={uploadProgress}
+                                    sx={{
+                                        marginTop: '8px',
+                                        height: '8px',
+                                        borderRadius: '4px'
+                                    }}
+                                />
+                                <Typography variant="caption" color="textSecondary" sx={{ marginTop: '4px', display: 'block' }}>
+                                    {uploadProgress}% complete
+                                </Typography>
                             </div>
                         )}
 

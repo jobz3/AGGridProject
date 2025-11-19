@@ -98,10 +98,10 @@ export default function DataGrid() {
         setDeleteModalOpen(true);
     }, []);
 
-    const fetchData = useCallback(async () => {
+    const fetchData = useCallback(async (page = 1, pageSize = 100) => {
         try {
             setLoading(true);
-            const data = await getData();
+            const data = await getData(page, pageSize);
 
             if (data && data.rows && data.rows.length > 0) {
                 const rows = data.rows;

@@ -6,7 +6,8 @@ dotenv.config({path: "../.env", quiet: true});
 const PORT = process.env.PORT || 3000;
 const dataRouter = require('./routes/data');
 
-app.use(express.json());
+app.use(express.json({ limit: '200mb' }));
+app.use(express.urlencoded({ limit: '200mb', extended: true }));
 app.use(cors());
 app.get('/', (req, res) => {
     res.send('Hello');
