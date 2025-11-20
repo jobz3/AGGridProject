@@ -326,7 +326,7 @@ export default function DataGrid() {
                 className="ag-theme-quartz"
                 data-dark-mode={mode === 'dark'}
                 style={{
-                    height: 'calc(100vh - 300px)',
+                    height: 'calc(100vh - 400px)',
                     minHeight: '500px',
                     width: '100%',
                     borderRadius: '0 0 12px 12px',

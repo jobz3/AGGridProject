@@ -1,11 +1,8 @@
-# Multi-stage build for production-ready frontend
 FROM node:18-alpine AS base
 
-# Build stage
 FROM base AS builder
 WORKDIR /app
 
-# Copy package files
 COPY client/package*.json ./
 
 RUN npm ci

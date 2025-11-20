@@ -198,44 +198,8 @@ AGGridProject/
 └── DEPLOYMENT.md          # This file
 ```
 
-## Sharing the Project
-
-To share this Dockerized project:
-
-1. **Package the code** (exclude sensitive files):
-```bash
-# Create archive without .env and node_modules
-tar -czf aggrid-project.tar.gz \
-  --exclude='.env' \
-  --exclude='node_modules' \
-  --exclude='.git' \
-  --exclude='dist' \
-  --exclude='build' \
-  .
-```
-
-2. **Provide instructions**:
-   - Share this DEPLOYMENT.md file
-   - Include .env.example
-   - Recipients should create their own `.env` file
-
-3. **Quick setup for recipients**:
-```bash
-# Extract project
-tar -xzf aggrid-project.tar.gz
-cd AGGridProject
-
-# Configure environment
-cp .env.example .env
-# Edit .env with proper credentials
-
-# Deploy
-docker-compose up --build -d
-```
-
-## Support
 
 For issues or questions:
-- Check logs: `docker-compose logs`
-- Verify environment: `docker-compose config`
+- Check logs: `docker logs`
+- Verify environment: `docker config`
 - Review health status: `docker-compose ps`

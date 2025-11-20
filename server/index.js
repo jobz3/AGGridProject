@@ -6,13 +6,9 @@ dotenv.config({path: "../.env", quiet: true});
 const PORT = process.env.PORT || 3000;
 const dataRouter = require('./routes/data');
 
-app.use(express.json({ limit: '200mb' }));
-app.use(express.urlencoded({ limit: '200mb', extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
-app.get('/', (req, res) => {
-    res.send('Hello');
-})
-
 app.use('/api/', dataRouter);
 
 app.listen(PORT, '0.0.0.0', () => console.log(`Server Running at PORT ${PORT}`));
