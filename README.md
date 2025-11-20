@@ -30,7 +30,7 @@ DB_PASS=your_db_password
 Build and start all services:
 
 ```bash
-docker-compose up --build -d
+docker compose up --build -d
 ```
 
 This will:
@@ -41,30 +41,10 @@ This will:
 
 ### 3. Access the Application
 
-- **Frontend**: http://localhost:5000
+- **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:3000
 - **Adminer (DB UI)**: http://localhost:8080
 - **MySQL**: localhost:3306
-
-## Architecture
-
-### Frontend (dockerfile.frontend)
-- **Build Stage**: Compiles React/Vite app using Node.js 18 Alpine
-- **Production Stage**: Serves static files via Nginx Alpine
-- **Features**:
-  - Multi-stage build reduces final image size
-  - SPA routing support
-  - API proxy to backend at `/api`
-  - Health checks
-
-### Backend (dockerfile.backend)
-- **Dependencies Stage**: Installs production dependencies only
-- **Production Stage**: Runs Node.js app as non-root user
-- **Features**:
-  - Multi-stage build
-  - Non-root user (nodeuser) for security
-  - Health check endpoint
-  - Alpine-based for minimal size
 
 ### Services
 
@@ -79,75 +59,32 @@ All services communicate through a dedicated Docker network (`app-network`).
 
 ### Start Services
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ### Stop Services
 ```bash
-docker-compose down
+docker compose down
 ```
 
 ### View Logs
 ```bash
 # All services
-docker-compose logs -f
+docker compose logs -f
 
 # Specific service
-docker-compose logs -f backend
-docker-compose logs -f frontend
+docker compose logs -f backend
+docker compose logs -f frontend
 ```
 
 ### Rebuild After Code Changes
 ```bash
-docker-compose up --build -d
+docker compose up --build -d
 ```
 
 ### Remove Everything (including volumes)
 ```bash
-docker-compose down -v
-```
-
-## Production Deployment
-
-### Security Checklist
-
-- [ ] Change all default passwords in `.env`
-- [ ] Use strong, unique passwords for `DB_ROOT_PASS` and `DB_PASS`
-- [ ] Remove or secure Adminer in production (port 8080)
-- [ ] Configure firewall rules to restrict port access
-- [ ] Use HTTPS with a reverse proxy (Nginx/Traefik)
-- [ ] Set up automated backups for MySQL volume
-- [ ] Review and update `restart: unless-stopped` policy
-
-### Environment-Specific Configuration
-
-For production, consider:
-
-1. **Use secrets management** instead of `.env` files
-2. **Set up SSL/TLS** with Let's Encrypt or similar
-3. **Configure logging** to external services
-4. **Set resource limits** in docker-compose.yml:
-
-```yaml
-services:
-  backend:
-    deploy:
-      resources:
-        limits:
-          cpus: '1'
-          memory: 512M
-```
-
-### Health Checks
-
-All services include health checks:
-- **MySQL**: Checks database availability
-- **Backend**: HTTP check on `/health` endpoint
-- **Frontend**: HTTP check on root endpoint
-
-Monitor with:
-```bash
-docker-compose ps
+docker compose down -v
 ```
 
 ## Troubleshooting
@@ -155,7 +92,7 @@ docker-compose ps
 ### Services won't start
 ```bash
 # Check logs
-docker-compose logs
+docker compose logs
 
 # Check if ports are already in use
 lsof -i :3000
@@ -166,21 +103,21 @@ lsof -i :3306
 ### Database connection errors
 ```bash
 # Ensure MySQL is healthy
-docker-compose ps mysql
+docker compose ps mysql
 
 # Check backend environment variables
-docker-compose exec backend env | grep DB_
+docker compose exec backend env | grep DB_
 ```
 
 ### Frontend can't connect to backend
 - Verify `BACKEND_URL` in `.env`
-- Check backend is running: `docker-compose ps backend`
+- Check backend is running: `docker compose ps backend`
 - Verify network connectivity: `docker network inspect aggridproject_app-network`
 
 ### Reset database
 ```bash
-docker-compose down -v
-docker-compose up -d
+docker compose down -v
+docker compose up -d
 ```
 
 ## File Structure
@@ -202,4 +139,4 @@ AGGridProject/
 For issues or questions:
 - Check logs: `docker logs`
 - Verify environment: `docker config`
-- Review health status: `docker-compose ps`
+- Review health status: `docker-   ps`
